@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' width='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23e0e0e0' d='M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z'/%3E%3C/svg%3E">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Dark Mode Variables (now default and only scheme) */
+            --container-bg: #2b2b2b;
+            --text-color: #e0e0e0;
+            --heading-color: #e0e0e0;
+            --section-title-color: #bdc3c7;
+            --section-title-border: #444;
+            --stats-panel-bg: #3a3a3a;
+            --stats-panel-border-left: #5c6c7b;
+            --stat-label-color: #c0c0c0;
+            --stat-value-color: #e0e0e0;
+            --sub-stat-color: #a0a0a0;
+            --button-bg: #6A8F3F;
+            --button-hover-bg: #7AA240;
+            --button-active-bg: #6C9035;
+            --table-border-color: #555;
+
+            /* Knowledge Button Colors */
+            --knowledge-button-bg: #2980b9;
+            --knowledge-button-hover-bg: #3498db;
+            --knowledge-button-active-bg: #21618C;
+
+            /* Fitness Button Colors - Now Orange */
+            --fitness-button-bg: #B86B14;
+            --fitness-button-hover-bg: #DA8E1C;
+            --fitness-button-active-bg: #9C580F;
+
+            /* Health Button Colors - Now Red */
+            --health-button-bg: #C0392B;
+            --health-button-hover-bg: #D64635;
+            --health-button-active-bg: #A93226;
+
+            /* Routines Button Colors - Now Green */
+            --routines-button-bg: #27ae60;
+            --routines-button-hover-bg: #2ecc71;
+            --routines-button-active-bg: #218c4b;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+            width: 100vw;
+            padding: 25px;
+            box-sizing: border-box;
+            background-color: var(--container-bg);
+            gap: 25px;
+        }
+        h1 {
+            color: var(--heading-color);
+            margin-bottom: 0;
+            margin-top: 0;
+        }
+
+        /* Dashboard Section Styles */
+        .dashboard-section {
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+            width: 100%;
+            max-width: 1400px;
+            box-sizing: border-box;
+        }
+
+        .resources-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        /* Wrapper for time and money items */
+        .resources-content-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .main-content {
+            display: none;
+        }
+        .top-row-graphs {
+            display: flex;
+            flex-direction: row;
+            gap: 25px;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            width: 100%;
+            margin-top: 50px;
+        }
+        .section-title {
+            font-size: 1.2em;
+            color: var(--section-title-color);
+            margin-top: 0;
+            margin-bottom: 10px;
+            border-bottom: 2px solid var(--section-title-border);
+            padding-bottom: 5px;
+            width: 100%;
+        }
+
+        /* Circle Container Styles (applied to all four) */
+        .circle-stat-container {
+            flex-shrink: 0;
+            width: 150px;
+            height: 150px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        /* New wrapper for chart and icon */
+        .chart-and-icon-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .icon-in-circle, .chart-center-text {
+            position: absolute;
+            z-index: 1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        .icon-in-circle {
+            font-size: 3em;
+        }
+
+        .chart-center-text {
+            font-size: 1.5em;
+        }
+
+        .circle-stat-text {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .circle-stat-text p {
+            margin: 0;
+            font-weight: bold;
+            color: var(--stat-label-color);
+            font-size: 1.1em;
+            text-align: center;
+        }
+        .circle-stat-text span {
+            color: var(--stat-value-color);
+            font-weight: bold;
+        }
+
+        /* Specific Circle Stat Icon Colors */
+        .stat-icon.health { color: #e74c3c; }
+        .stat-icon.fitness { color: #e68a00; }
+        .stat-icon.knowledge { color: #3498db; }
+        .stat-icon.routines { color: #27ae60; }
+
+        /* New styles for stat groups and action buttons */
+        .stat-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        /* Increased distance from graph to the FIRST button in specific groups */
+        .health-stat-group .action-button:first-of-type,
+        .knowledge-stat-group .action-button:first-of-type,
+        .fitness-stat-group .action-button:first-of-type,
+        .routines-stat-group .action-button:first-of-type {
+            margin-top: 60px;
+        }
+
+        .action-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            white-space: nowrap;
+            width: 100%; /* Make buttons fill 100% width of their parent .stat-group */
+        }
+        .action-button:hover {
+            background-color: var(--button-hover-bg);
+        }
+        .action-button:active {
+            background-color: var(--button-active-bg);
+        }
+        .action-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .action-button:disabled:hover {
+            background-color: #cccccc !important;
+        }
+
+        /* Health specific buttons - Now Red */
+        .health-button {
+            background-color: var(--health-button-bg);
+        }
+        .health-button:hover {
+            background-color: var(--health-button-hover-bg);
+        }
+        .health-button:active {
+            background-color: var(--health-button-active-bg);
+        }
+
+        /* Knowledge specific buttons */
+        .knowledge-button {
+            background-color: var(--knowledge-button-bg);
+        }
+        .knowledge-button:hover {
+            background-color: var(--knowledge-button-hover-bg);
+        }
+        .knowledge-button:active {
+            background-color: var(--knowledge-button-active-bg);
+        }
+
+        /* Fitness specific buttons - Now Orange */
+        .fitness-button {
+            background-color: var(--fitness-button-bg);
+        }
+        .fitness-button:hover {
+            background-color: var(--fitness-button-hover-bg);
+        }
+        .fitness-button:active {
+            background-color: var(--fitness-button-active-bg);
+        }
+
+        /* Routines specific buttons - New Green */
+        .routines-button {
+            background-color: var(--routines-button-bg);
+        }
+        .routines-button:hover {
+            background-color: var(--routines-button-hover-bg);
+        }
+        .routines-button:active {
+            background-color: var(--routines-button-active-bg);
+        }
+
+        /* Rules section line spacing */
+        .rules-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .rules-section li {
+            margin-bottom: 1em;
+        }
+        .rules-section ul ul {
+            margin-top: 0.6em;
+            margin-left: 1.5em;
+            margin-bottom: 0em;
+        }
+        
+        /* Resource Item Styling */
+        .resource-item {
+            background-color: var(--stats-panel-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            border: 1px solid var(--section-title-border);
+            margin-bottom: 0px;
+            flex: 1;
+            min-width: 300px;
+            box-sizing: border-box;
+        }
+        .resource-item p {
+            margin: 0;
+        }
+        .resource-item.money,
+        .resource-item.time {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .money-heading {
+            font-size: 1.1em;
+            color: var(--stat-label-color);
+            margin: 2% 0 2% 0;
+            font-weight: bold;
+        }
+        .time-heading {
+            font-size: 1.1em;
+            color: var(--stat-label-color);
+            margin: 2% 0 2% 0;
+            font-weight: bold;
+        }
+        .money-value {
+            font-size: 1.2em;
+            color: var(--stat-value-color);
+            font-weight: bold;
+        }
+
+        /* Styles for chart and its custom legend (applicable to both time and money) */
+        .resource-item .chart-and-legend-wrapper {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            width: 100%;
+            justify-content: center;
+            margin: 5%;
+        }
+
+        .resource-item.money .chart-and-legend-wrapper {
+            gap: 30px;
+        }
+
+        .resource-item .chart-container-for-flex {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            flex-shrink: 0;
+        }
+        #timeAllocationChart,
+        #timeAllocationChart2,
+        #moneyAllocationChart {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .custom-chart-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: flex-start;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            border: 1px solid var(--section-title-border);
+        }
+        .legend-label {
+            white-space: nowrap;
+        }
+
+        /* Custom spacing for Time and Money Allocation Legends */
+        #timeAllocationLegend {
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 50px;
+        }
+
+        #moneyAllocationLegend {
+            gap: 25px;
+        }
+
+        /* New wrapper for two time charts */
+        .time-charts-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 120px;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        /* Styles for new Routines section */
+        .routines-content-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .checklist-container {
+            background-color: var(--stats-panel-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            border: 1px solid var(--section-title-border);
+            flex: 1;
+            min-width: 300px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: relative; /* Added for absolute positioning of progress bar */
+            padding-bottom: 45px; /* Added space for the progress bar at the bottom */
+        }
+
+        .checklist-container h3 {
+            font-size: 1.1em;
+            color: var(--stat-label-color);
+            margin: 0 0 15px 0;
+            font-weight: bold;
+            width: 100%;
+            text-align: center;
+        }
+
+        .checklist-container ul {
+            list-style: none;
+            padding: 0;
+            width: 100%;
+            margin: 0;
+        }
+
+        .checklist-container li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 1em;
+            color: var(--text-color);
+            gap: 10px;
+        }
+
+        .checklist-container input[type="checkbox"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--section-title-color);
+            border-radius: 4px;
+            cursor: pointer;
+            outline: none;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .checklist-container input[type="checkbox"]:checked {
+            background-color: var(--routines-button-bg);
+            border-color: var(--routines-button-bg);
+        }
+
+        .checklist-container input[type="checkbox"]:checked::before {
+            content: '✔';
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            color: white;
+        }
+
+        .checklist-container label {
+            cursor: pointer;
+            flex-grow: 1;
+        }
+
+        /* Progress Bar styles */
+        .progress-bar-container {
+            width: calc(100% - 30px); /* 100% minus left/right padding of parent */
+            height: 20px;
+            background-color: #2b2b2b; /* Unfilled color */
+            border-radius: 10px;
+            position: absolute; /* Positioned relative to .checklist-container */
+            bottom: 15px; /* Aligned to the bottom padding of parent */
+            left: 15px; /* Aligned to the left padding of parent */
+            overflow: hidden;
+            border: 1px solid var(--section-title-border);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%; /* Initial width */
+            background-color: var(--routines-button-bg); /* Green fill */
+            border-radius: 10px;
+            transition: width 0.3s ease-in-out;
+            /* Removed flex properties and text color from here */
+        }
+        
+        .progress-bar-text {
+            position: absolute;
+            width: 100%; /* Ensure it spans the full width of its parent */
+            height: 100%; /* Ensure it spans the full height of its parent */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-color); /* Always visible text color */
+            font-weight: bold;
+            font-size: 0.85em;
+            z-index: 1; /* Ensure text is above fill */
+            text-align: center; /* Ensure text is centered horizontally */
+            display: flex; /* Use flexbox for vertical centering */
+            align-items: center; /* Center items vertically */
+            justify-content: center; /* Center items horizontally */
+        }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+                gap: 15px;
+            }
+            .dashboard-section {
+                padding: 15px;
+                width: calc(100% - 30px);
+            }
+            .top-row-graphs {
+                flex-direction: column;
+                gap: 20px;
+                margin-top: 30px;
+            }
+            .circle-stat-container {
+                width: 150px;
+                height: 150px;
+            }
+            .health-stat-group .action-button:first-of-type,
+            .knowledge-stat-group .action-button:first-of-type,
+            .fitness-stat-group .action-button:first-of-type,
+            .routines-stat-group .action-button:first-of-type {
+                margin-top: 35px;
+            }
+            .resources-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            .resources-content-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+            .resource-item {
+                min-width: unset;
+                width: 100%;
+            }
+            .time-charts-wrapper {
+                flex-direction: column;
+                gap: 20px;
+            }
+            #timeAllocationLegend {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .routines-content-wrapper {
+                flex-direction: column;
+            }
+            .checklist-container {
+                min-width: unset;
+                width: 100%;
+                padding-bottom: 45px; /* Adjust for mobile */
+            }
+            .progress-bar-container {
+                width: calc(100% - 30px); /* Adjust for mobile padding */
+                left: 15px; /* Adjust for mobile padding */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard</h1>
+
+    <div id="routines-section" class="dashboard-section">
+        <h2 class="section-title">♻️ Routinen</h2>
+        <div class="routines-content-wrapper">
+            <div class="checklist-container">
+                <h3>Morgenroutine</h3>
+                <ul>
+                    <li><input type="checkbox" id="morningCheck1"><label for="morningCheck1">Stoßlüften 💨</label></li>
+                    <li><input type="checkbox" id="morningCheck2"><label for="morningCheck2">20 Push-Ups 💪</label></li>
+                    <li><input type="checkbox" id="morningCheck3"><label for="morningCheck3">Bett machen 🛏️</label></li>
+                    <li><input type="checkbox" id="morningCheck4"><label for="morningCheck4">Hände waschen 🧼</label></li>
+                    <li style="margin-bottom: 0;"><input type="checkbox" id="morningCheck5"><label for="morningCheck5">Hautpflege ✨</label></li>
+                    <hr>
+                    <li><input type="checkbox" id="eveningCheck2"><label for="eveningCheck2">WhatsApp checken 💬</label></li>
+                    <li><input type="checkbox" id="eveningCheck2"><label for="eveningCheck2">Discord checken 📱</label></li>
+                    <li><input type="checkbox" id="eveningCheck2"><label for="eveningCheck2">Mails checken 📧</label></li>
+                </ul>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="morningRoutineProgressBarFill"></div>
+                    <span class="progress-bar-text" id="morningRoutineProgressText">0 %</span>
+                </div>
+            </div>
+            <div class="checklist-container">
+                <h3>Abendroutine</h3>
+                <ul>
+                    <li><input type="checkbox" id="eveningCheck1"><label for="eveningCheck1">Stoßlüften 💨</label></li>
+                    <li><input type="checkbox" id="eveningCheck4"><label for="eveningCheck4">Geräte laden ⚡</label></li>
+                    <li style="margin-bottom: 0;"><input type="checkbox" id="eveningCheck7"><label for="eveningCheck7">Hautpflege ✨</label></li>
+                    <hr>
+                    <li><input type="checkbox" id="eveningCheck5"><label for="eveningCheck5">Zimmer aufräumen 🔄</label></li>
+                    <li><input type="checkbox" id="eveningCheck6"><label for="eveningCheck6">nächsten Tag planen 🗓️</label></li>
+                    <li><input type="checkbox" id="eveningCheck8"><label for="eveningCheck8">Mahlzeiten vorbereiten 🍲</label></li>
+                    <li><input type="checkbox" id="eveningCheck9"><label for="eveningCheck9">Kleidung bereitlegen 👕</label></li>
+                    <li><input type="checkbox" id="eveningCheck10"><label for="eveningCheck10">Tasche packen 🎒</label></li>
+                </ul>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="eveningRoutineProgressBarFill"></div>
+                    <span class="progress-bar-text" id="eveningRoutineProgressText">0 %</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stats-section dashboard-section">
+        <h2 class="section-title">📊 Stats</h2>
+        <div class="top-row-graphs">
+            <div class="stat-group routines-stat-group">
+                <div id="routines-circle-container" class="circle-stat-container">
+                    <div class="chart-and-icon-wrapper">
+                        <canvas id="routinesCircleChart"></canvas>
+                        <span class="material-icons stat-icon routines icon-in-circle">event_note</span>
+                    </div>
+                    <div class="circle-stat-text">
+                        <p>Routinen<br><span id="stat-routines" class="stat-value"></span></p>
+                    </div>
+                </div> 
+                <button id="morningRoutineButton" class="action-button routines-button">☀️ Morgen (+50)</button>
+                <button id="eveningRoutineButton" class="action-button routines-button">🌙 Abend (+50)</button>
+            </div>
+
+            <div class="stat-group health-stat-group">
+                <div id="health-circle-container" class="circle-stat-container">
+                    <div class="chart-and-icon-wrapper">
+                        <canvas id="healthCircleChart"></canvas>
+                        <span class="material-icons stat-icon health icon-in-circle">favorite</span>
+                    </div>
+                    <div class="circle-stat-text">
+                        <p>Gesundheit<br><span id="stat-health" class="stat-value"></span></p>
+                    </div>
+                </div> 
+                <button id="brushTeethButton" class="action-button health-button">🪥 Zähne putzen (+25)</button>
+                <button id="tenThousandStepsButton" class="action-button health-button">🚶 10.000 Schritte (+50)</button>
+            </div>
+
+            <div class="stat-group fitness-stat-group">
+                <div id="fitness-circle-container" class="circle-stat-container">
+                    <div class="chart-and-icon-wrapper">
+                        <canvas id="fitnessCircleChart"></canvas>
+                        <span class="material-icons stat-icon fitness icon-in-circle">fitness_center</span>
+                    </div>
+                    <div class="circle-stat-text">
+                        <p>Fitness<br><span id="stat-fitness" class="stat-value"></span></p>
+                    </div>
+                </div>
+                <button id="strengthTrainingButton" class="action-button fitness-button">💪 Krafttraining (+100)</button>
+                <button id="cardioTrainingButton" class="action-button fitness-button">⚡ Ausdauertraining (+100)</button>
+            </div>
+
+            <div class="stat-group knowledge-stat-group">
+                <div id="knowledge-circle-container" class="circle-stat-container">
+                    <div class="chart-and-icon-wrapper">
+                        <canvas id="knowledgeCircleChart"></canvas>
+                        <span class="material-icons stat-icon knowledge icon-in-circle">school</span>
+                    </div>
+                    <div class="circle-stat-text">
+                        <p>Wissen<br><span id="stat-knowledge" class="stat-value"></span></p>
+                    </div>
+                </div>
+                <button id="studyUniversityButton" class="action-button knowledge-button">🏫 Lernen (+70)</button>
+                <button id="readBookButton" class="action-button knowledge-button">📖 Lesen (+10)</button>
+                <button id="playChessButton" class="action-button knowledge-button">♟ Schach spielen (+10)</button>
+                <button id="learnLanguagesButton" class="action-button knowledge-button">🌍 Sprachen lernen (+10)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="rules-section dashboard-section">
+        <h2 class="section-title">📜 Regeln</h2>
+        <ul>
+            <li>
+                <strong>Bei Leerlauf oder Langeweile:</strong>
+                <ul>
+                    <li>Regel 1: Bei Langeweile, finde eine produktive Aktivität: koche, putze, lerne oder suche eine neue Aufgabe – es gibt immer etwas zu tun!</li>
+                    <li>Regel 2: Bei Erschöpfung, priorisiere Ruhe und Neuausrichtung: gehe spazieren, lege dich hin, lies, spiele Schach oder beschäftige dich mit einem Zauberwürfel.</li>
+                </ul>
+            </li>
+            <li style="margin-bottom: 0;">
+                <strong>Wenn du aktiv mit einer Aufgabe beschäftigt bist:</strong>
+                <ul>
+                    <li>Regel 3.1: Wenn du dich langweilst, ziehe in Betracht, neben deiner Hauptaufgabe etwas Sinnvolles zu tun (z. B. beim Putzen einen Podcast hören).</li>
+                    <li style="margin-bottom: 0;">Regel 3.2: Versuche, deine primäre Aufgabe so effizient und schnell wie möglich zu erledigen.</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="resources-section dashboard-section">
+        <h2 class="section-title">💰 Ressourcen</h2>
+        <div class="resources-content-wrapper"> <div class="resource-item time">
+                <h3 class="time-heading">Zeit</h3>
+                <div class="time-charts-wrapper"> <div class="chart-container-for-flex">
+                        <canvas id="timeAllocationChart"></canvas>
+                    </div>
+                    <div class="chart-container-for-flex"> <canvas id="timeAllocationChart2"></canvas>
+                    </div>
+                </div>
+                <div class="custom-chart-legend" id="timeAllocationLegend"> <div class="legend-item">
+                        <span class="legend-color-box" style="background-color: #e74c3c;"></span>
+                        <span class="legend-label">Gesundheit</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color-box" style="background-color: #3498db;"></span>
+                        <span class="legend-label">Wissen</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color-box" style="background-color: #e68a00;"></span>
+                        <span class="legend-label">Fitness</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color-box" style="background-color: #27ae60;"></span>
+                        <span class="legend-label">Routinen</span>
+                    </div>
+                </div>
+            </div>
+            <div class="resource-item money">
+                <h3 class="money-heading">Geld</h3>
+                <p class="money-value" style="margin: 20px">x €</p>
+                <div class="chart-and-legend-wrapper" style="flex-direction: column;">
+                    <div class="chart-container-for-flex" style="width: 80%; height: 30px;">
+                        <canvas id="moneyAllocationChart"></canvas>
+                    </div>
+                    <div class="custom-chart-legend" id="moneyAllocationLegend" style="flex-direction: row;">
+                        <div class="legend-item">
+                            <span class="legend-color-box" style="background-color: #28a428;"></span>
+                            <span class="legend-label">ETFs</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color-box" style="background-color: #f1c40f;"></span>
+                            <span class="legend-label">Cash</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Player's initial stats
+        let playerStats = {
+            health: { value: 0, max: 100 },
+            fitness: { value: 0, max: 100 },
+            knowledge: { value: 0, max: 100 },
+            routines: { value: 0, max: 100 },
+        };
+
+        let tenThousandStepsUsedToday = false;
+        let brushTeethPressCount = 0;
+        let studyUniversityUsed = false;
+        let readBookUsed = false;
+        let playChessUsed = false;
+        let learnLanguagesUsed = false;
+        let strengthTrainingUsed = false;
+        let cardioTrainingUsed = false;
+        let morningRoutineUsed = false;
+        let eveningRoutineUsed = false;
+
+        let healthChartInstance;
+        let fitnessChartInstance;
+        let knowledgeChartInstance;
+        let routinesChartInstance;
+        let moneyAllocationChartInstance;
+        let timeAllocationChartInstance;
+        let timeAllocationChart2Instance;
+
+        // Function to initialize the Health Circle Chart
+        function initializeHealthChart() {
+            const ctx = document.getElementById('healthCircleChart').getContext('2d');
+            healthChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [playerStats.health.value, playerStats.health.max - playerStats.health.value],
+                        backgroundColor: [
+                            '#e74c3c',
+                            '#3a3a3a'
+                        ],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        tooltip: { enabled: false },
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Function to initialize the Fitness Circle Chart
+        function initializeFitnessChart() {
+            const ctx = document.getElementById('fitnessCircleChart').getContext('2d');
+            fitnessChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [playerStats.fitness.value, playerStats.fitness.max - playerStats.fitness.value],
+                        backgroundColor: [
+                            '#B86B14',
+                            '#3a3a3a'
+                        ],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        tooltip: { enabled: false },
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Function to initialize the Knowledge Circle Chart
+        function initializeKnowledgeChart() {
+            const ctx = document.getElementById('knowledgeCircleChart').getContext('2d');
+            knowledgeChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [playerStats.knowledge.value, playerStats.knowledge.max - playerStats.knowledge.value],
+                        backgroundColor: [
+                            '#3498db',
+                            '#3a3a3a'
+                        ],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        tooltip: { enabled: false },
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Function to initialize the Routines Circle Chart
+        function initializeRoutinesChart() {
+            const ctx = document.getElementById('routinesCircleChart').getContext('2d');
+            routinesChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [playerStats.routines.value, playerStats.routines.max - playerStats.routines.value],
+                        backgroundColor: [
+                            '#27ae60',
+                            '#3a3a3a'
+                        ],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        tooltip: { enabled: false },
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Function to initialize the Time Allocation Chart (first one)
+        function initializeTimeAllocationChart() {
+            const ctx = document.getElementById('timeAllocationChart').getContext('2d');
+            timeAllocationChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Gesundheit', 'Wissen'],
+                    datasets: [{
+                        data: [50, 50],
+                        backgroundColor: [
+                            '#e74c3c',
+                            '#3498db',
+                        ],
+                        borderColor: '#2b2b2b',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    rotation: 0 * Math.PI,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            display: false,
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to initialize the second Time Allocation Chart
+        function initializeTimeAllocationChart2() {
+            const ctx = document.getElementById('timeAllocationChart2').getContext('2d');
+            timeAllocationChart2Instance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Fitness', 'Routinen', 'Gesundheit'],
+                    datasets: [{
+                        data: [25, 25, 50],
+                        backgroundColor: [
+                            '#e68a00',
+                            '#27ae60',
+                            '#e74c3c',
+                        ],
+                        borderColor: '#2b2b2b',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    rotation: 0 * Math.PI,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            display: false,
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Function to initialize the Money Allocation Chart
+        function initializeMoneyAllocationChart() {
+            const ctx = document.getElementById('moneyAllocationChart').getContext('2d');
+            moneyAllocationChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Geld'],
+                    datasets: [
+                        {
+                            data: [20],
+                            backgroundColor: '#28a428',
+                            borderColor: '#1a1a1a',
+                            borderWidth: 1,
+                            stack: 'moneyStack',
+                            borderRadius: {
+                                topLeft: 5,
+                                bottomLeft: 5,
+                                topRight: 0,
+                                bottomRight: 0
+                            },
+                            borderSkipped: false
+                        },
+                        {
+                            data: [20],
+                            backgroundColor: '#28a428',
+                            borderColor: '#1a1a1a',
+                            borderWidth: 1,
+                            stack: 'moneyStack',
+                            borderRadius: 0,
+                            borderSkipped: false
+                        },
+                        {
+                            data: [20],
+                            backgroundColor: '#28a428',
+                            borderColor: '#1a1a1a',
+                            borderWidth: 1,
+                            stack: 'moneyStack',
+                            borderRadius: 0,
+                            borderSkipped: false
+                        },
+                        {
+                            data: [20],
+                            backgroundColor: '#28a428',
+                            borderColor: '#1a1a1a',
+                            borderWidth: 1,
+                            stack: 'moneyStack',
+                            borderRadius: 0,
+                            borderSkipped: false
+                        },
+                        {
+                            data: [20],
+                            backgroundColor: '#f1c40f',
+                            borderColor: '#1a1a1a',
+                            borderWidth: 1,
+                            stack: 'moneyStack',
+                            borderRadius: {
+                                topLeft: 0,
+                                bottomLeft: 0,
+                                topRight: 5,
+                                bottomRight: 5
+                            },
+                            borderSkipped: false
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            display: false,
+                            stacked: true,
+                            max: 100,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            display: false,
+                            stacked: true,
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: { enabled: false },
+                        legend: { display: false }
+                    },
+                    barPercentage: 1,
+                    categoryPercentage: 1
+                }
+            });
+        }
+
+        // Function to update the display of all stats
+        function updateStatsDisplay() {
+            if (healthChartInstance) {
+                healthChartInstance.data.datasets[0].data = [playerStats.health.value, playerStats.health.max - playerStats.health.value];
+                healthChartInstance.update();
+            }
+            document.getElementById('stat-health').textContent = `${playerStats.health.value} / ${playerStats.health.max}`;
+
+            if (fitnessChartInstance) {
+                fitnessChartInstance.data.datasets[0].data = [playerStats.fitness.value, playerStats.fitness.max - playerStats.fitness.value];
+                fitnessChartInstance.update();
+            }
+            document.getElementById('stat-fitness').textContent = `${playerStats.fitness.value} / ${playerStats.fitness.max}`;
+
+            if (knowledgeChartInstance) {
+                knowledgeChartInstance.data.datasets[0].data = [playerStats.knowledge.value, playerStats.knowledge.max - playerStats.knowledge.value];
+                knowledgeChartInstance.update();
+            }
+            document.getElementById('stat-knowledge').textContent = `${playerStats.knowledge.value} / ${playerStats.knowledge.max}`;
+
+            // Update Routines display
+            if (routinesChartInstance) {
+                routinesChartInstance.data.datasets[0].data = [playerStats.routines.value, playerStats.routines.max - playerStats.routines.value];
+                routinesChartInstance.update();
+            }
+            document.getElementById('stat-routines').textContent = `${playerStats.routines.value} / ${playerStats.routines.max}`;
+        }
+
+        // Function to update the Morning Routine Progress Bar based on checklist
+        function updateMorningRoutineProgressBar() {
+            const checkboxes = document.querySelectorAll('#routines-section .checklist-container:first-of-type input[type="checkbox"]');
+            let completedCount = 0;
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    completedCount++;
+                }
+            });
+            const totalItems = checkboxes.length;
+            const percentage = totalItems > 0 ? (completedCount / totalItems) * 100 : 0;
+
+            const progressBarFill = document.getElementById('morningRoutineProgressBarFill');
+            const progressBarText = document.getElementById('morningRoutineProgressText');
+
+            progressBarFill.style.width = `${percentage}%`;
+            progressBarText.textContent = `${percentage.toFixed(0)} %`; // Always update text and center it
+
+            // Trigger morning routine button if all checked and not already used
+            const morningRoutineButton = document.getElementById('morningRoutineButton');
+            if (percentage === 100 && !morningRoutineButton.disabled) {
+                morningRoutineButton.click();
+            }
+        }
+
+        // Function to update the Evening Routine Checklist and trigger button
+        function updateEveningRoutineChecklist() {
+            const checkboxes = document.querySelectorAll('#routines-section .checklist-container:last-of-type input[type="checkbox"]');
+            let completedCount = 0;
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    completedCount++;
+                }
+            });
+            const totalItems = checkboxes.length;
+            const percentage = totalItems > 0 ? (completedCount / totalItems) * 100 : 0;
+
+            const progressBarFill = document.getElementById('eveningRoutineProgressBarFill');
+            const progressBarText = document.getElementById('eveningRoutineProgressText');
+
+            progressBarFill.style.width = `${percentage}%`;
+            progressBarText.textContent = `${percentage.toFixed(0)} %`; // Always update text and center it
+
+            // Trigger evening routine button if all checked and not already used
+            const eveningRoutineButton = document.getElementById('eveningRoutineButton');
+            if (percentage === 100 && !eveningRoutineButton.disabled) {
+                eveningRoutineButton.click();
+            }
+        }
+
+        // Function to handle "Brush Teeth" action
+        function brushTeeth() {
+            if (brushTeethPressCount < 2) {
+                const healthIncrease = 25;
+                playerStats.health.value = Math.min(playerStats.health.value + healthIncrease, playerStats.health.max);
+                brushTeethPressCount++;
+                updateStatsDisplay();
+                if (brushTeethPressCount >= 2) {
+                    document.getElementById('brushTeethButton').disabled = true;
+                }
+            }
+        }
+
+        // Function to handle "10.000 steps" action
+        function addTenThousandSteps() {
+            if (!tenThousandStepsUsedToday) {
+                const healthIncrease = 50;
+                playerStats.health.value = Math.min(playerStats.health.value + healthIncrease, playerStats.health.max);
+                tenThousandStepsUsedToday = true;
+                document.getElementById('tenThousandStepsButton').disabled = true;
+                updateStatsDisplay();
+            }
+        }
+
+        // Function to handle "Study for University" action
+        function studyUniversity() {
+            if (!studyUniversityUsed) {
+                const knowledgeIncrease = 70;
+                playerStats.knowledge.value = Math.min(playerStats.knowledge.value + knowledgeIncrease, playerStats.knowledge.max);
+                studyUniversityUsed = true;
+                document.getElementById('studyUniversityButton').disabled = true;
+                updateStatsDisplay();
+            }
+        }
+
+        // Function to handle "Read a book" action
+        function readBook() {
+            if (!readBookUsed) {
+                const knowledgeIncrease = 10;
+                playerStats.knowledge.value = Math.min(playerStats.knowledge.value + knowledgeIncrease, playerStats.knowledge.max);
+                readBookUsed = true;
+                document.getElementById('readBookButton').disabled = true;
+                updateStatsDisplay();
+            }
+        }
+
+        // Function to handle "Play Chess" action
+        function playChess() {
+            if (!playChessUsed) {
+                const knowledgeIncrease = 10;
+                playerStats.knowledge.value = Math.min(playerStats.knowledge.value + knowledgeIncrease, playerStats.knowledge.max);
+                playChessUsed = true;
+                document.getElementById('playChessButton').disabled = true;
+                updateStatsDisplay();
+            }
+        }
+
+        // Function to handle "Learn Languages" action
+        function learnLanguages() {
+            if (!learnLanguagesUsed) {
+                const knowledgeIncrease = 10;
+                playerStats.knowledge.value = Math.min(playerStats.knowledge.value + knowledgeIncrease, playerStats.knowledge.max);
+                learnLanguagesUsed = true;
+                document.getElementById('learnLanguagesButton').disabled = true;
+                updateStatsDisplay();
+            }
+        }
+
+        // Function to handle "Strength Training" action
+        function strengthTraining() {
+            if (!strengthTrainingUsed) {
+                const fitnessIncrease = 100;
+                playerStats.fitness.value = Math.min(playerStats.fitness.value + fitnessIncrease, playerStats.fitness.max);
+                strengthTrainingUsed = true;
+                document.getElementById('strengthTrainingButton').disabled = true;
+                updateStatsDisplay();
+            }
+        }
+
+        // Function to handle "Cardio Training" action
+        function cardioTraining() {
+            if (!cardioTrainingUsed) {
+                const fitnessIncrease = 100;
+                playerStats.fitness.value = Math.min(playerStats.fitness.value + fitnessIncrease, playerStats.fitness.max);
+                cardioTrainingUsed = true;
+                document.getElementById('cardioTrainingButton').disabled = true;
+                updateStatsDisplay();
+            }
+        }
+
+        // Function to handle "Morning Routine" action
+        function morningRoutine() {
+            if (!morningRoutineUsed) {
+                const routinesIncrease = 50;
+                playerStats.routines.value = Math.min(playerStats.routines.value + routinesIncrease, playerStats.routines.max);
+                morningRoutineUsed = true;
+                document.getElementById('morningRoutineButton').disabled = true;
+                updateStatsDisplay();
+            }
+        }
+
+        // Function to handle "Evening Routine" action
+        function eveningRoutine() {
+            if (!eveningRoutineUsed) {
+                const routinesIncrease = 50;
+                playerStats.routines.value = Math.min(playerStats.routines.value + routinesIncrease, playerStats.routines.max);
+                eveningRoutineUsed = true;
+                document.getElementById('eveningRoutineButton').disabled = true;
+                updateStatsDisplay();
+            }
+        }
+
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeHealthChart();
+            initializeFitnessChart();
+            initializeKnowledgeChart();
+            initializeRoutinesChart();
+            initializeMoneyAllocationChart();
+            initializeTimeAllocationChart();
+            initializeTimeAllocationChart2();
+            updateStatsDisplay();
+            updateMorningRoutineProgressBar(); // Call initially to set correct progress/percentage
+            updateEveningRoutineChecklist(); // Call initially for evening routine progress bar
+
+            // Add event listener for "Brush Teeth" button
+            const brushTeethButton = document.getElementById('brushTeethButton');
+            if (brushTeethButton) {
+                brushTeethButton.addEventListener('click', brushTeeth);
+            }
+            // Add event listener for "10.000 steps" button
+            const tenThousandStepsButton = document.getElementById('tenThousandStepsButton');
+            if (tenThousandStepsButton) {
+                tenThousandStepsButton.addEventListener('click', addTenThousandSteps);
+            }
+
+            // Add event listeners for new Knowledge buttons
+            const studyUniversityButton = document.getElementById('studyUniversityButton');
+            if (studyUniversityButton) {
+                studyUniversityButton.addEventListener('click', studyUniversity);
+            }
+            const readBookButton = document.getElementById('readBookButton');
+            if (readBookButton) {
+                readBookButton.addEventListener('click', readBook);
+            }
+            const playChessButton = document.getElementById('playChessButton');
+            if (playChessButton) {
+                playChessButton.addEventListener('click', playChess);
+            }
+            const learnLanguagesButton = document.getElementById('learnLanguagesButton');
+            if (learnLanguagesButton) {
+                learnLanguagesButton.addEventListener('click', learnLanguages);
+            }
+
+            // Add event listener for "Strength Training" button
+            const strengthTrainingButton = document.getElementById('strengthTrainingButton');
+            if (strengthTrainingButton) {
+                strengthTrainingButton.addEventListener('click', strengthTraining);
+            }
+
+            // Add event listener for "Cardio Training" button
+            const cardioTrainingButton = document.getElementById('cardioTrainingButton');
+            if (cardioTrainingButton) {
+                cardioTrainingButton.addEventListener('click', cardioTraining);
+            }
+
+            // Add event listeners for Routines buttons
+            const morningRoutineButton = document.getElementById('morningRoutineButton');
+            if (morningRoutineButton) {
+                morningRoutineButton.addEventListener('click', morningRoutine);
+            }
+            const eveningRoutineButton = document.getElementById('eveningRoutineButton');
+            if (eveningRoutineButton) {
+                eveningRoutineButton.addEventListener('click', eveningRoutine);
+            }
+
+            // Add event listeners for morning routine checkboxes
+            const morningCheckboxes = document.querySelectorAll('#routines-section .checklist-container:first-of-type input[type="checkbox"]');
+            morningCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateMorningRoutineProgressBar);
+            });
+
+            // Add event listeners for evening routine checkboxes
+            const eveningCheckboxes = document.querySelectorAll('#routines-section .checklist-container:last-of-type input[type="checkbox"]');
+            eveningCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateEveningRoutineChecklist);
+            });
+        });
+    </script>
+</body>
+</html>
