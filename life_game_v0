@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life RPG: Healthy Choices Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0; /* Reset default body margin */
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to the top */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+        .container {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 700px; /* Wider to accommodate side-by-side layout */
+            display: flex; /* Use flexbox for main sections */
+            gap: 25px; /* Space between stat panel and game area */
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2em;
+            width: 100%; /* Ensure heading spans full width in a flex context */
+        }
+        .section-title {
+            font-size: 1.2em;
+            color: #34495e;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 5px;
+        }
+
+        /* STATS PANEL STYLES */
+        #stats-panel {
+            flex: 0 0 250px; /* Fixed width for the stats panel */
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 5px solid #3498db; /* Accent border */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .stat-item {
+            margin-bottom: 5px; /* Reduced margin */
+        }
+        .stat-item p {
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.05em;
+            flex-wrap: wrap; /* Allow wrapping for longer labels */
+        }
+        .stat-label {
+            font-weight: bold;
+            color: #555;
+            margin-right: 10px;
+            flex-grow: 1; /* Allow label to take available space */
+        }
+        .stat-value {
+            text-align: right;
+            color: #2c3e50; /* Changed stat value color for consistency */
+            font-weight: bold;
+            flex-shrink: 0; /* Prevent value from shrinking */
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 3px;
+            height: 6px; /* Slightly thinner progress bars */
+            margin-top: 4px; /* Space above progress bar */
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%; /* Will be set by JS */
+            border-radius: 3px;
+            transition: width 0.3s ease-in-out;
+        }
+        /* Specific colors for certain stats, maintaining the new palette */
+        #stat-health-bar .progress-bar { background-color: #e74c3c; } /* Red */
+        #stat-strength-bar .progress-bar { background-color: #3498db; } /* Blue */
+        #stat-knowledge-bar .progress-bar { background-color: #9b59b6; } /* Purple */
+        #stat-sleep-bar .progress-bar { background-color: #f1c40f; } /* Yellow */
+        #stat-hygiene-bar .progress-bar { background-color: #1abc9c; } /* Turquoise */
+        #stat-mood-bar .progress-bar { background-color: #27ae60; } /* Green */
+
+
+        /* GAME AREA STYLES */
+        #game-area {
+            flex-grow: 1; /* Takes up remaining space */
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        #game-area p {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #555;
+            line-height: 1.5;
+        }
+        #game-area ul {
+            list-style: none; /* Remove default bullet points */
+            padding-left: 0;
+            margin-bottom: 20px;
+        }
+        #game-area ul li {
+            margin-bottom: 8px;
+            color: #444;
+        }
+        #game-area ul li strong {
+            color: #2c3e50;
+        }
+
+        /* Message Area */
+        .message {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+            min-height: 22px;
+            padding: 10px;
+            border-radius: 4px;
+            transition: opacity 0.5s ease-in-out;
+            border: 1px solid transparent; /* Default border */
+        }
+        .message.success {
+            color: #27ae60;
+            background-color: #e9f7ef;
+            border-color: #d4edda;
+        }
+        .message.error {
+            color: #c0392b;
+            background-color: #fdedec;
+            border-color: #f5c6cb;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column; /* Stack panels vertically on smaller screens */
+                max-width: 95%;
+                padding: 15px;
+            }
+            #stats-panel {
+                flex: none; /* Remove fixed width */
+                width: 100%;
+                margin-bottom: 20px;
+            }
+            #game-area {
+                padding: 0; /* Remove internal padding if stacking */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Life RPG: A Journey of Growth</h1>
+
+        <div id="stats-panel">
+            <div class="section-title">📊 Your Current Stats</div>
+
+            <div class="stat-item">
+                <p><span class="stat-label">Health:</span> <span id="stat-health" class="stat-value"></span></p>
+                <div class="progress-bar-container" id="stat-health-bar">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <p><span class="stat-label">Strength:</span> <span id="stat-strength" class="stat-value"></span></p>
+                <div class="progress-bar-container" id="stat-strength-bar">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <p><span class="stat-label">Knowledge:</span> <span id="stat-knowledge" class="stat-value"></span></p>
+                <div class="progress-bar-container" id="stat-knowledge-bar">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <p><span class="stat-label">Sleep:</span> <span id="stat-sleep" class="stat-value"></span></p>
+                <div class="progress-bar-container" id="stat-sleep-bar">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <p><span class="stat-label">Hygiene:</span> <span id="stat-hygiene" class="stat-value"></span></p>
+                <div class="progress-bar-container" id="stat-hygiene-bar">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <p><span class="stat-label">Mood:</span> <span id="stat-mood" class="stat-value"></span></p>
+                <div class="progress-bar-container" id="stat-mood-bar">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <p style="font-size: 0.9em; color: #777; margin-top: 15px; text-align: center;">
+                Every healthy choice improves your journey!
+            </p>
+        </div>
+
+        <div id="game-area">
+            <div class="section-title">✨ Welcome to Your Personal Game!</div>
+            <p>This simulator is designed to help you track and improve key aspects of your life, turning daily habits into an engaging RPG experience. Your adventure in self-improvement starts now!</p>
+            <p>On the left, your personal **stats** reflect your current well-being and progress:</p>
+            <ul>
+                <li>**Health**: Your overall vitality. Nurture it with balanced nutrition and mindful living.</li>
+                <li>**Strength**: Your physical prowess. Enhance it through consistent exercise and sports.</li>
+                <li>**Knowledge**: Your intellectual growth. Excel in your **Business Informatics** studies and explore new topics!</li>
+                <li>**Sleep**: Your vital recovery. Prioritize quality sleep for optimal function and well-being.</li>
+                <li>**Hygiene**: Your personal cleanliness. Maintaining high hygiene is essential for comfort and confidence.</li>
+                <li>**Mood**: Your emotional state. Boost it with activities you enjoy, like playing **chess** or spending time on hobbies.</li>
+            </ul>
+            <p>Your goal is to make healthy choices that push these stats higher. We'll introduce actions you can take to influence these in the next steps!</p>
+            <div id="messageArea" class="message">Welcome to your Life RPG! Let's make every day count.</div>
+        </div>
+    </div>
+
+    <script>
+        // Player's initial stats, based on your interests and background
+        let playerStats = {
+            health: { value: 90, max: 100 },
+            strength: { value: 65, max: 100 },
+            knowledge: { value: 40, max: 100 }, // As a new student in Stralsund
+            sleep: { value: 85, max: 100 },
+            hygiene: { value: 95, max: 100 }, // Given your slight mysophobia, likely kept high
+            mood: { value: 75, max: 100 }
+        };
+
+        let messageTimeout; // To manage the message display timer
+
+        // Function to update the display of all stats
+        function updateStatsDisplay() {
+            for (const stat in playerStats) {
+                const statElement = document.getElementById(`stat-${stat}`);
+                const progressBarContainer = document.getElementById(`stat-${stat}-bar`);
+
+                if (statElement) {
+                    let displayValue = playerStats[stat].value;
+                    let displayMax = playerStats[stat].max;
+
+                    // Format specific stats as X/Y if applicable, others just value
+                    if (['health', 'sleep', 'hygiene'].includes(stat)) {
+                        statElement.textContent = `${displayValue}/${displayMax}`;
+                    } else {
+                        statElement.textContent = displayValue;
+                    }
+
+                    // Update progress bar
+                    if (progressBarContainer) {
+                        const progressBar = progressBarContainer.querySelector('.progress-bar');
+                        const percentage = (displayValue / displayMax) * 100;
+                        progressBar.style.width = `${percentage}%`;
+                    }
+                }
+            }
+        }
+
+        // Function to show game messages
+        function showMessage(msg, type = 'neutral') {
+            const messageAreaElement = document.getElementById('messageArea');
+            messageAreaElement.textContent = msg;
+            messageAreaElement.className = 'message'; // Reset classes
+            if (type === 'success') messageAreaElement.classList.add('success');
+            else if (type === 'error') messageAreaElement.classList.add('error');
+            
+            clearTimeout(messageTimeout); // Clear any existing timeout
+            messageTimeout = setTimeout(() => {
+                messageAreaElement.textContent = ''; // Clear message after 4 seconds
+                messageAreaElement.className = 'message'; // Reset classes
+            }, 4000);
+        }
+
+        // Initial display of stats when the game loads
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatsDisplay();
+            showMessage('Welcome to your Life RPG! Your adventure in self-improvement awaits.', 'neutral');
+        });
+
+        // --- Future Game Logic (Placeholder) ---
+        // Here's where we can add functions for player actions, events, etc.
+        // Example:
+        /*
+        function performAction(actionType) {
+            switch(actionType) {
+                case 'exercise':
+                    playerStats.strength.value = Math.min(playerStats.strength.max, playerStats.strength.value + 5);
+                    playerStats.sleep.value = Math.max(0, playerStats.sleep.value - 10); // Exercise can make you tired
+                    playerStats.mood.value = Math.min(playerStats.mood.max, playerStats.mood.value + 3); // Good for mood
+                    showMessage('You exercised and feel stronger!', 'success');
+                    break;
+                case 'study_informatics':
+                    playerStats.knowledge.value = Math.min(playerStats.knowledge.max, playerStats.knowledge.value + 7);
+                    playerStats.mood.value = Math.max(0, playerStats.mood.value - 2); // Studying can be draining
+                    showMessage('You gained new insights into Business Informatics!', 'success');
+                    break;
+                case 'get_good_sleep':
+                    playerStats.sleep.value = Math.min(playerStats.sleep.max, playerStats.sleep.value + 15);
+                    playerStats.health.value = Math.min(playerStats.health.max, playerStats.health.value + 5);
+                    playerStats.mood.value = Math.min(playerStats.mood.max, playerStats.mood.value + 10);
+                    showMessage('A night of restful sleep invigorates you!', 'success');
+                    break;
+                // Add more actions here
+            }
+            updateStatsDisplay(); // Always update display after changing stats
+        }
+        */
+    </script>
+</body>
+</html>
